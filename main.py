@@ -66,11 +66,6 @@ class Quadrat(db.Model):
     ph_suelo = db.Column(db.Float())
     ramas = db.Column(db.Boolean())
     profundidad_hojarasca = db.Column(db.Float)
-    taxa = db.relationship(
-        'TaxonQuadrat',
-        backref='quadrat',
-        lazy='dynamic'
-    )
 
     def __init__(self, transecto, quadrat):
         self.transecto = transecto
@@ -84,11 +79,7 @@ class Taxon(db.Model):
     genero = db.Column(db.String(255))
     especie = db.Column(db.String(255))
     autor = db.Column(db.String(255))
-    quadrats = db.relationship(
-        'TaxonQuadrat',
-        backref='taxon',
-        lazy='dynamic'
-    )
+
     def __init__(self, genero, especie=""):
         self.genero = genero
         self.especie = especie
@@ -104,8 +95,7 @@ class TaxonQuadrat(db.Model):
     abundancia = db.Column(db.Integer())
     quadrat = db.relationship(
         'Quadrat',
-        backref='taxa',
-        lazy='dynamic'
+        backref='taxa'
     )
     taxon = db.relationship(
         'Taxon',

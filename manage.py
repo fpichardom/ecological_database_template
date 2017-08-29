@@ -8,7 +8,8 @@ from main import (
     Transecto,
     ParqueUrbano,
     Participante,
-    Quadrat
+    Quadrat,
+    TaxonQuadrat
 )
 migrate = Migrate(app, db)
 
@@ -25,7 +26,8 @@ def make_shell_context():
         Transecto=Transecto,
         ParqueUrbano=ParqueUrbano,
         Participante=Participante,
-        Quadrat=Quadrat
+        Quadrat=Quadrat,
+        TaxonQuadrat=TaxonQuadrat
     )
 if __name__ == "__main__":
     manager.run()
