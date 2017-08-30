@@ -20,8 +20,10 @@ participantes = db.Table(
 
 
 class ParqueUrbano(db.Model):
-    __tablename__ = 'parque_urbano'
-    parque = db.Column(db.String(255), primary_key=True)
+    #__tablename__ = 'parque_urbano'
+
+    id = db.Column(db.Integer, primary_key=True)
+    parque = db.Column(db.String(100))
     transectos = db.relationship(
         'Transecto',
         backref='parque',
@@ -33,16 +35,18 @@ class ParqueUrbano(db.Model):
         return "<Parque '{}'>".format(self.parque)
 
 class Transecto(db.Model):
-    transecto = db.Column(db.String(255), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
+    transecto = db.Column(db.String(10))
     temporada = db.Column(db.Enum(Temporada))
-    fecha = db.Column(db.Date())
-    hora_inicial = db.Column(db.Time())
-    hora_final = db.Column(db.Time())
-    temperatura = db.Column(db.Float())
-    humedad = db.Column(db.Float())
-    velocidad_viento = db.Column(db.Float())
-    observaciones = db.Column(db.Text())
-    parque_id = db.Column(db.String(255), db.ForeignKey('parque_urbano.parque'))
+    fecha = db.Column(db.Date)
+    hora_inicial = db.Column(db.Time)
+    hora_final = db.Column(db.Time)
+    temperatura = db.Column(db.Float)
+    humedad = db.Column(db.Float)
+    velocidad_viento = db.Column(db.Float)
+    observaciones = db.Column(db.Text)
+    parque_id = db.Column(db.Integer, db.ForeignKey('parque_urbano.id'))
+
     quadrats_tr = db.relationship(
         'Quadrat',
         backref='transecto',
@@ -60,25 +64,26 @@ class Transecto(db.Model):
         return "<Transecto '{}'>".format(self.transecto)
 
 class Quadrat(db.Model):
-    quadrat = db.Column(db.String(10), primary_key=True)
-    transecto_id = db.Column(db.String(255), db.ForeignKey('transecto.transecto'), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
+    quadrat = db.Column(db.String(10))
     temperatura_suelo = db.Column(db.Float())
     ph_suelo = db.Column(db.Float())
     ramas = db.Column(db.Boolean())
     profundidad_hojarasca = db.Column(db.Float)
+    transecto_id = db.Column(db.Integer, db.ForeignKey('transecto.id'))
 
-    def __init__(self, transecto, quadrat):
-        self.transecto = transecto
+    def __init__(self, quadrat):
         self.quadrat = quadrat
 
     def __repr__(self):
-        return "<Quadrat '{0}'-'{1}>".format(self.transecto, self.quadrat)
+        return "<Quadrat '{}'>".format(self.quadrat)
 
 class Taxon(db.Model):
-    nombre_cientifico = db.Column(db.String(10), primary_key=True)
-    genero = db.Column(db.String(255))
-    especie = db.Column(db.String(255))
-    autor = db.Column(db.String(255))
+    id = db.Column(db.Integer, primary_key=True)
+    nombre_cientifico = db.Column(db.String(100))
+    genero = db.Column(db.String(50))
+    especie = db.Column(db.String(50))
+    autor = db.Column(db.String(100))
 
     def __init__(self, genero, especie=""):
         self.genero = genero
@@ -113,6 +118,35 @@ class Participante(db.Model):
 
     def __repr__(self):
         return "<'{}' '{}'>".format(self.nombre, self.apellidos)
+
+@app.route('/')
+#@app.route('/parque_urbano')
+def home():
+    parques = ParqueUrbano.query.all()
+    return render_template(
+        'parque.html',
+        parques=parques)
+
+@app.route('/transectos/<int:parque_id>')
+def transectos(parque_id):
+    transectos = Transecto.query.filter_by(parque_id=parque_id)
+    parque = transectos.first().parque
+    return render_template(
+        'transectos.html',
+        transectos=transectos,
+        parque=parque)
+
+@app.route('/quadrats/<int:tr_id>')
+def quadrats(tr_id):
+    quadrats = Quadrat.query.filter_by(transecto_id=tr_id)
+    transecto = Transecto.query.get(tr_id)
+    parque = transecto.parque
+    return render_template(
+        'quadrats.html',
+        quadrats=quadrats,
+        transecto=transecto,
+        parque=parque)
+
 
 if __name__ == '__main__':
     app.run()
