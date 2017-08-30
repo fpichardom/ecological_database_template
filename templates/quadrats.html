@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Transectos{% endblock %}
+{% block sub %} {{parque.parque}},{{transecto.transecto}} {% endblock %}
+{% block body %}
+    <div class="row">
+        <div class="col-md-9">
+            {% for qdt in quadrats %}
+                <div class="row">
+                    <div class="col-md-12">
+                        <h3>{{ qdt.quadrat }}</h3>
+                    </div>
+                </div>
+            {%endfor%}       
+            
+        </div>
+
+    </div>
+{%endblock%}

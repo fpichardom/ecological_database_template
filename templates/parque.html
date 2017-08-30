@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Parques{% endblock %}
+{% block body %}
+    <div class="row">
+        <div class="col-md-9">
+            {% for p in parques %}
+                <div class="row">
+                    <div class="col-md-12">
+                        <h3><a href="{{ url_for('transectos',parque_id=p.id) }}">{{ p.parque }}</a></h3>
+                    </div>
+                </div>
+            {%endfor%}       
+            
+        </div>
+
+    </div>
+{%endblock%}
