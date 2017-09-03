@@ -1,20 +1,25 @@
 {% extends "base.html" %}
 {% block title %} {{quadrat.quadrat}} {% endblock %}
-{% block sub %} {{ quadrat.transecto.parque.parque }}, {{quadrat.transecto.transecto}}, {{quadrat.quadrat}} {% endblock %}
+{% block sub %} 
+    <a href="{{ url_for('transectos',parque_id=quadrat.transecto.parque.id) }}">{{ quadrat.transecto.parque.parque }}</a>, 
+    <a href="{{ url_for('quadrats',tr_id=quadrat.transecto.id) }}">{{quadrat.transecto.transecto}}</a>, 
+    <b>{{ quadrat.quadrat }}</b> 
+{% endblock %}
 {% block body %}
     <div class="row">
         <div class="col-md-5">
             <div class="row">
-                <div class="col-md-12">
+                <div class="col-md-10">
                     <h3>Añade especies al Quadrat</h3>
                     <div class="row">
+                        <script type="text/javascript">
+                            $(document).ready(function() {
+                                $("select.search-select").select2();
+                            });
+                        </script>
                         <form method="POST" action="{{ url_for('quadrat', qdt_id=quadrat.id)}}">
                             {{ form.hidden_tag()}}
-                            <datalist id="taxa" autocomplete="off">
-                                {% for taxon in taxa%}
-                                    <option  value="{{ taxon.id }}">{{ taxon.nombre_cientifico }}</option>
-                                {% endfor %}
-                            </datalist>
+                            
                             {{ render_field(form.taxon_id) }}
                             {{ render_field(form.abundancia) }}
                             {{ render_field(form.vial) }}

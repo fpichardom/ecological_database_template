@@ -1,7 +1,7 @@
 from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
-from wtforms import StringField, IntegerField, BooleanField, TextAreaField
+from wtforms import StringField, IntegerField, BooleanField, TextAreaField, SelectField
 from wtforms.validators import DataRequired, Length
 from config import Config
 import enum
@@ -74,7 +74,7 @@ class Quadrat(db.Model):
     ramas = db.Column(db.Boolean())
     profundidad_hojarasca = db.Column(db.Float)
     transecto_id = db.Column(db.Integer, db.ForeignKey('transecto.id'))
-    taxa =db.relationship(
+    taxa = db.relationship(
         'Taxon',
         secondary='taxon_quadrat',
         viewonly=True
@@ -132,7 +132,7 @@ class Participante(db.Model):
 
 class TaxonQuadratForm(FlaskForm):
     #quadrat_id = IntegerField('Quadrat',validators=[DataRequired()])
-    taxon_id = IntegerField('Taxon', validators=[DataRequired()])
+    taxon_id = SelectField('Taxon', validators=[DataRequired()], coerce=int)
     abundancia = IntegerField('Abundancia')
     vial = StringField('Vial', validators=[Length(max=3)])
     alfiler = IntegerField('Alfiler')
@@ -170,9 +170,10 @@ def quadrats(tr_id):
 @app.route('/quadrat/<int:qdt_id>', methods=['GET', 'POST'])
 def quadrat(qdt_id):
     form = TaxonQuadratForm()
+    form.taxon_id.choices = [(taxon.id, taxon.nombre_cientifico) for taxon in Taxon.query.order_by('nombre_cientifico')]
     quadrat = Quadrat.query.get_or_404(qdt_id)
     asos = TaxonQuadrat.query.filter_by(quadrat_id=qdt_id).all()
-    taxa = Taxon.query.all()
+    #taxa = Taxon.query.all()
     if form.validate_on_submit():
         new_bind = TaxonQuadrat()
         new_bind.quadrat_id = qdt_id
@@ -189,7 +190,6 @@ def quadrat(qdt_id):
         'quadrat.html',
         form=form,
         quadrat=quadrat,
-        taxa=taxa,
         asos=asos
     )
 if __name__ == '__main__':
