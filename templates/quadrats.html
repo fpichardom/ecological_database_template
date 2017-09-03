@@ -7,7 +7,7 @@
             {% for qdt in quadrats %}
                 <div class="row">
                     <div class="col-md-12">
-                        <h3>{{ qdt.quadrat }}</h3>
+                        <h3><a href="{{ url_for('quadrat', qdt_id=qdt.id) }}">{{ qdt.quadrat }}</a></h3>
                     </div>
                 </div>
             {%endfor%}       

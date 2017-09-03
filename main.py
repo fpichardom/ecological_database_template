@@ -1,5 +1,8 @@
 from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
+from flask_wtf import FlaskForm
+from wtforms import StringField, IntegerField, BooleanField, TextAreaField
+from wtforms.validators import DataRequired, Length
 from config import Config
 import enum
 app = Flask(__name__)
@@ -71,7 +74,11 @@ class Quadrat(db.Model):
     ramas = db.Column(db.Boolean())
     profundidad_hojarasca = db.Column(db.Float)
     transecto_id = db.Column(db.Integer, db.ForeignKey('transecto.id'))
-
+    taxa =db.relationship(
+        'Taxon',
+        secondary='taxon_quadrat',
+        viewonly=True
+    )
     def __init__(self, quadrat):
         self.quadrat = quadrat
 
@@ -95,16 +102,19 @@ class Taxon(db.Model):
 
 class TaxonQuadrat(db.Model):
     __tablename__ = 'taxon_quadrat'
-    quadrat_id = db.Column(db.String(10), db.ForeignKey('quadrat.quadrat'), primary_key=True)
-    taxon_id = db.Column(db.String(255), db.ForeignKey('taxon.nombre_cientifico'), primary_key=True)
-    abundancia = db.Column(db.Integer())
+    quadrat_id = db.Column(db.Integer, db.ForeignKey('quadrat.id'), primary_key=True)
+    taxon_id = db.Column(db.Integer, db.ForeignKey('taxon.id'), primary_key=True)
+    abundancia = db.Column(db.Integer)
+    vial = db.Column(db.String(3))
+    alfiler = db.Column(db.Integer)
+    alcohol = db.Column(db.Integer)
     quadrat = db.relationship(
         'Quadrat',
-        backref='taxa'
+        backref='taxon_aso'
     )
     taxon = db.relationship(
         'Taxon',
-        backref='quadrats'
+        backref='quadrat_aso'
     )
 
 class Participante(db.Model):
@@ -118,7 +128,17 @@ class Participante(db.Model):
 
     def __repr__(self):
         return "<'{}' '{}'>".format(self.nombre, self.apellidos)
+###########################Forms###############################
 
+class TaxonQuadratForm(FlaskForm):
+    #quadrat_id = IntegerField('Quadrat',validators=[DataRequired()])
+    taxon_id = IntegerField('Taxon', validators=[DataRequired()])
+    abundancia = IntegerField('Abundancia')
+    vial = StringField('Vial', validators=[Length(max=3)])
+    alfiler = IntegerField('Alfiler')
+    alcohol = IntegerField('Alcohol')
+
+####################### Views #####################
 @app.route('/')
 #@app.route('/parque_urbano')
 def home():
@@ -147,6 +167,30 @@ def quadrats(tr_id):
         transecto=transecto,
         parque=parque)
 
+@app.route('/quadrat/<int:qdt_id>', methods=['GET', 'POST'])
+def quadrat(qdt_id):
+    form = TaxonQuadratForm()
+    quadrat = Quadrat.query.get_or_404(qdt_id)
+    asos = TaxonQuadrat.query.filter_by(quadrat_id=qdt_id).all()
+    taxa = Taxon.query.all()
+    if form.validate_on_submit():
+        new_bind = TaxonQuadrat()
+        new_bind.quadrat_id = qdt_id
+        new_bind.taxon_id = form.taxon_id.data
+        new_bind.abundancia = form.abundancia.data
+        new_bind.vial = form.vial.data.upper()
+        new_bind.alfiler = form.alfiler.data
+        new_bind.alcohol = form.alcohol.data
+        if not TaxonQuadrat.query.filter_by(quadrat_id=qdt_id, taxon_id=form.taxon_id.data).all():
+            db.session.add(new_bind)
+            db.session.commit()
 
+    return render_template(
+        'quadrat.html',
+        form=form,
+        quadrat=quadrat,
+        taxa=taxa,
+        asos=asos
+    )
 if __name__ == '__main__':
     app.run()

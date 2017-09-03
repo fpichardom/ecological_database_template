@@ -1,3 +1,19 @@
+{% macro render_field(field) %}
+    <div class="form-group">    
+        {{ field.label }}
+        {% if field.errors %}
+            {%for e in field.errors %}
+                <p class="help-block">{{ e }}</p>
+            {% endfor %}
+        {% endif %}
+        {%if field.name == 'taxon_id'%}
+            {{ field(class_="form-control", list="taxa", autocomplete="off") }}
+        {% else %}
+            {{ field(class_="form-control") }}
+        {% endif %}
+    </div>
+{% endmacro%}
+
 <!DOCTYPE html>
 <html>
     <head>
@@ -6,6 +22,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>{% block title %}Blog{% endblock %}</title>
         <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/select2.min.css') }}">
     </head>
     <body>
         <div class="container">
@@ -21,5 +38,7 @@
         
         <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
         <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/select2.min.js') }}"></script>
+        
     </body>
 </html>
