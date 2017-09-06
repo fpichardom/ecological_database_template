@@ -1,18 +1,24 @@
 {% macro render_field(field) %}
-    <div class="form-group">    
+    <div class="form-group">
         {{ field.label }}
         {% if field.errors %}
             {%for e in field.errors %}
                 <p class="help-block">{{ e }}</p>
             {% endfor %}
         {% endif %}
-        {%if field.type == 'SelectField'%}
-            {{ field(class_="search-select form-control") }}
+        {% if field.type == 'SelectField' %}
+            {{ field(class_="form-control search-select") }}
         {% else %}
             {{ field(class_="form-control") }}
         {% endif %}
     </div>
 {% endmacro%}
+{% macro render_checkbox(field) %}
+    <div class="checkbox">
+        <label>{{field}} <b>{{field.label.text}}</b></label>
+    </div>
+{%- endmacro %}
+
 
 <!DOCTYPE html>
 <html>

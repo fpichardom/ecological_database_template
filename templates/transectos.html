@@ -3,15 +3,41 @@
 {% block sub %} {{parque.parque}} {% endblock %}
 {% block body %}
     <div class="row">
-        <div class="col-md-9">
-            {% for tr in transectos %}
+        <div class="col-md-5">
+            <div class="col-md-10">
                 <div class="row">
-                    <div class="col-md-12">
-                        <h3><a href="{{ url_for('quadrats',tr_id=tr.id) }}">{{ tr.transecto }}</a></h3>
-                    </div>
+                    <h3>Añadir Transecto</h3>
+                </div>          
+                <div class="row">
+                    <form method="POST" action="{{ url_for('transectos',parque_id=parque.id) }}">
+                        {{ form.hidden_tag() }}
+                        {{ render_field(form.transecto) }}
+                        {{ render_field(form.temporada) }}
+                        {{ render_field(form.fecha) }}
+                        {{ render_field(form.hora_inicial) }}
+                        {{ render_field(form.hora_final) }}
+                        {{ render_field(form.temperatura) }}
+                        {{ render_field(form.humedad) }}
+                        {{ render_field(form.velocidad_viento) }}
+                        {{ render_field(form.observaciones) }}
+                        <input type="submit" value="Añadir">
+                    </form>
                 </div>
-            {%endfor%}       
-            
+            </div>
+        </div>
+        <div class="col-md-5">
+            <div class="row">
+                <h3>Lista de Transectos</h3>
+            </div>            
+            <div class="row">            
+                {% for tr in transectos %}
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h3><a href="{{ url_for('quadrats',tr_id=tr.id) }}">{{ tr.transecto }}</a></h3>
+                        </div>
+                    </div>
+                {%endfor%}       
+            </div>
         </div>
 
     </div>

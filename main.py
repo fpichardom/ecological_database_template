@@ -1,8 +1,9 @@
 from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
-from wtforms import StringField, IntegerField, BooleanField, TextAreaField, SelectField
-from wtforms.validators import DataRequired, Length
+from wtforms import StringField, IntegerField, BooleanField, TextAreaField, SelectField, DateField, FloatField
+from wtforms_components import TimeField
+from wtforms.validators import DataRequired, Length, Optional
 from config import Config
 import enum
 app = Flask(__name__)
@@ -61,8 +62,8 @@ class Transecto(db.Model):
         backref=db.backref('transectos', lazy='dynamic')
     )
 
-    def __init__(self, transecto):
-        self.transecto = transecto
+    #def __init__(self, transecto):
+    #    self.transecto = transecto
     def __repr__(self):
         return "<Transecto '{}'>".format(self.transecto)
 
@@ -79,8 +80,8 @@ class Quadrat(db.Model):
         secondary='taxon_quadrat',
         viewonly=True
     )
-    def __init__(self, quadrat):
-        self.quadrat = quadrat
+    #def __init__(self, quadrat):
+    #    self.quadrat = quadrat
 
     def __repr__(self):
         return "<Quadrat '{}'>".format(self.quadrat)
@@ -129,50 +130,109 @@ class Participante(db.Model):
     def __repr__(self):
         return "<'{}' '{}'>".format(self.nombre, self.apellidos)
 ###########################Forms###############################
+class TransectoForm(FlaskForm):
+    transecto = StringField('Transecto', validators=[DataRequired(), Length(max=10)])
+    temporada = SelectField('Temporada', choices=[('seca', 'seca'), ('humeda', 'humeda')])
+    fecha = DateField('Fecha', validators=[Optional()])
+    hora_inicial = TimeField('Hora Inicial', validators=[Optional()])
+    hora_final = TimeField('Hora Final', validators=[Optional()])
+    temperatura = FloatField('Temperatura', validators=[Optional()])
+    humedad = FloatField('Humedad', validators=[Optional()])
+    velocidad_viento = FloatField('Velocidad Viento', validators=[Optional()])
+    observaciones = TextAreaField('Observaciones', validators=[Optional()])
 
 class TaxonQuadratForm(FlaskForm):
     #quadrat_id = IntegerField('Quadrat',validators=[DataRequired()])
     taxon_id = SelectField('Taxon', validators=[DataRequired()], coerce=int)
-    abundancia = IntegerField('Abundancia')
+    abundancia = IntegerField('Abundancia', validators=[Optional()])
     vial = StringField('Vial', validators=[Length(max=3)])
-    alfiler = IntegerField('Alfiler')
-    alcohol = IntegerField('Alcohol')
+    alfiler = IntegerField('Alfiler', validators=[Optional()])
+    alcohol = IntegerField('Alcohol', validators=[Optional()])
+
+class QuadratForm(FlaskForm):
+    quadrat = StringField('Quadrat', validators=[DataRequired(), Length(max=10)])
+    temperatura_suelo = FloatField('Temperatura Suelo', validators=[Optional()])
+    ramas = BooleanField('Ramas')
+    profundidad_hojarasca = FloatField('Profundidad Hojarasca', validators=[Optional()])
+
+class ParqueForm(FlaskForm):
+    parque = StringField('Parque Urbano', validators=[DataRequired(), Length(max=100)])
 
 ####################### Views #####################
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 #@app.route('/parque_urbano')
 def home():
+    form = ParqueForm()
+    if form.validate_on_submit():
+        new_parque = ParqueUrbano(form.parque.data)
+        db.session.add(new_parque)
+        db.session.commit()
     parques = ParqueUrbano.query.all()
     return render_template(
         'parque.html',
-        parques=parques)
+        parques=parques,
+        form=form)
 
-@app.route('/transectos/<int:parque_id>')
+@app.route('/transectos/<int:parque_id>', methods=['GET', 'POST'])
 def transectos(parque_id):
+    form = TransectoForm()
     transectos = Transecto.query.filter_by(parque_id=parque_id)
-    parque = transectos.first().parque
+    parque = ParqueUrbano.query.get_or_404(parque_id)
+
+    if form.validate_on_submit():
+        new_tr = Transecto()
+        #new_tr = Transecto(form.transecto.data)
+        new_tr.parque_id = parque_id
+        new_tr.transecto = form.transecto.data
+        new_tr.temporada = form.temporada.data
+        new_tr.fecha = form.fecha.data
+        new_tr.hora_inicial = form.hora_inicial.data
+        new_tr.hora_final = form.hora_final.data
+        new_tr.temperatura = form.temperatura.data
+        new_tr.humedad = form.humedad.data
+        new_tr.velocidad_viento = form.velocidad_viento.data
+        new_tr.observaciones = form.observaciones.data
+
+        db.session.add(new_tr)
+        db.session.commit()
+
     return render_template(
         'transectos.html',
         transectos=transectos,
-        parque=parque)
+        parque=parque,
+        form=form)
 
-@app.route('/quadrats/<int:tr_id>')
+@app.route('/quadrats/<int:tr_id>', methods=['GET','POST'])
 def quadrats(tr_id):
+    form = QuadratForm()
     quadrats = Quadrat.query.filter_by(transecto_id=tr_id)
     transecto = Transecto.query.get(tr_id)
     parque = transecto.parque
+
+    if form.validate_on_submit():
+        new_qdt = Quadrat()
+        new_qdt.transecto_id = tr_id
+        new_qdt.quadrat = form.quadrat.data
+        new_qdt.temperatura_suelo = form.temperatura_suelo.data
+        new_qdt.ramas = form.ramas.data
+        new_qdt.profundidad_hojarasca = form.profundidad_hojarasca.data
+
+        db.session.add(new_qdt)
+        db.session.commit()
+
+
     return render_template(
         'quadrats.html',
         quadrats=quadrats,
         transecto=transecto,
-        parque=parque)
+        parque=parque,
+        form=form)
 
 @app.route('/quadrat/<int:qdt_id>', methods=['GET', 'POST'])
 def quadrat(qdt_id):
     form = TaxonQuadratForm()
     form.taxon_id.choices = [(taxon.id, taxon.nombre_cientifico) for taxon in Taxon.query.order_by('nombre_cientifico')]
     quadrat = Quadrat.query.get_or_404(qdt_id)
-    asos = TaxonQuadrat.query.filter_by(quadrat_id=qdt_id).all()
     #taxa = Taxon.query.all()
     if form.validate_on_submit():
         new_bind = TaxonQuadrat()
@@ -185,7 +245,7 @@ def quadrat(qdt_id):
         if not TaxonQuadrat.query.filter_by(quadrat_id=qdt_id, taxon_id=form.taxon_id.data).all():
             db.session.add(new_bind)
             db.session.commit()
-
+    asos = TaxonQuadrat.query.filter_by(quadrat_id=qdt_id).all()
     return render_template(
         'quadrat.html',
         form=form,
