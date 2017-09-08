@@ -8,6 +8,10 @@
         {% endif %}
         {% if field.type == 'SelectField' %}
             {{ field(class_="form-control search-select") }}
+        {%elif field.type == 'DateField'%}
+            {{ field(class_="form-control", placeholder="yyyy-mm-dd") }}
+        {%elif field.type == 'TimeField'%}
+            {{ field(class_="form-control", placeholder="HH:MM 24h") }}
         {% else %}
             {{ field(class_="form-control") }}
         {% endif %}

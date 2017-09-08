@@ -1,7 +1,9 @@
 from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
-from wtforms import StringField, IntegerField, BooleanField, TextAreaField, SelectField, DateField, FloatField
+from wtforms import (StringField, IntegerField, BooleanField, TextAreaField,
+                     SelectField, DecimalField)
+from wtforms.fields.html5 import DateField
 from wtforms_components import TimeField
 from wtforms.validators import DataRequired, Length, Optional
 from config import Config
@@ -133,12 +135,12 @@ class Participante(db.Model):
 class TransectoForm(FlaskForm):
     transecto = StringField('Transecto', validators=[DataRequired(), Length(max=10)])
     temporada = SelectField('Temporada', choices=[('seca', 'seca'), ('humeda', 'humeda')])
-    fecha = DateField('Fecha', validators=[Optional()])
-    hora_inicial = TimeField('Hora Inicial', validators=[Optional()])
-    hora_final = TimeField('Hora Final', validators=[Optional()])
-    temperatura = FloatField('Temperatura', validators=[Optional()])
-    humedad = FloatField('Humedad', validators=[Optional()])
-    velocidad_viento = FloatField('Velocidad Viento', validators=[Optional()])
+    fecha = DateField('Fecha', format='%Y-%m-%d', validators=[Optional()])
+    hora_inicial = TimeField('Hora Inicial', format='%H:%M', validators=[Optional()])
+    hora_final = TimeField('Hora Final', format='%H:%M', validators=[Optional()])
+    temperatura = DecimalField('Temperatura', validators=[Optional()])
+    humedad = DecimalField('Humedad', validators=[Optional()])
+    velocidad_viento = DecimalField('Velocidad Viento', validators=[Optional()])
     observaciones = TextAreaField('Observaciones', validators=[Optional()])
 
 class TaxonQuadratForm(FlaskForm):
@@ -151,9 +153,9 @@ class TaxonQuadratForm(FlaskForm):
 
 class QuadratForm(FlaskForm):
     quadrat = StringField('Quadrat', validators=[DataRequired(), Length(max=10)])
-    temperatura_suelo = FloatField('Temperatura Suelo', validators=[Optional()])
+    temperatura_suelo = DecimalField('Temperatura Suelo', validators=[Optional()])
     ramas = BooleanField('Ramas')
-    profundidad_hojarasca = FloatField('Profundidad Hojarasca', validators=[Optional()])
+    profundidad_hojarasca = DecimalField('Profundidad Hojarasca', validators=[Optional()])
 
 class ParqueForm(FlaskForm):
     parque = StringField('Parque Urbano', validators=[DataRequired(), Length(max=100)])
