@@ -1,11 +1,12 @@
 from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
-from wtforms import (StringField, IntegerField, BooleanField, TextAreaField,
-                     SelectField, DecimalField)
-from wtforms.fields.html5 import DateField
-from wtforms_components import TimeField
-from wtforms.validators import DataRequired, Length, Optional
+from wtforms_alchemy import model_form_factory
+#from wtforms import (StringField, IntegerField, BooleanField, TextAreaField,
+#                     SelectField, DecimalField)
+#from wtforms.fields.html5 import DateField
+#from wtforms_components import TimeField
+#from wtforms.validators import DataRequired, Length, Optional
 from config import Config
 import enum
 app = Flask(__name__)
@@ -23,6 +24,35 @@ participantes = db.Table(
     db.Column('participante_id', db.Integer, db.ForeignKey('participante.id'))
 )
 ###################### Definicion de Tablas ########################
+class Taxon(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    nombre_cientifico = db.Column(db.String(100))
+    genero = db.Column(db.String(50))
+    especie = db.Column(db.String(50))
+    autor = db.Column(db.String(100))
+
+    def __init__(self, genero, especie=""):
+        self.genero = genero
+        self.especie = especie
+        self.nombre_cientifico = " ".join([self.genero, self.especie]).strip()
+
+class TaxonQuadrat(db.Model):
+    __tablename__ = 'taxon_quadrat'
+    quadrat_id = db.Column(db.Integer, db.ForeignKey('quadrat.id'), primary_key=True)
+    taxon_id = db.Column(db.Integer, db.ForeignKey('taxon.id'), primary_key=True,
+    info={'choices':[(taxon.id, taxon.nombre_cientifico) for taxon in Taxon.query.order_by('nombre_cientifico')]})
+    abundancia = db.Column(db.Integer)
+    vial = db.Column(db.String(3))
+    alfiler = db.Column(db.Integer)
+    alcohol = db.Column(db.Integer)
+    quadrat = db.relationship(
+        'Quadrat',
+        backref='taxon_aso'
+    )
+    taxon = db.relationship(
+        'Taxon',
+        backref='quadrat_aso'
+    )
 
 
 class ParqueUrbano(db.Model):
@@ -42,14 +72,14 @@ class ParqueUrbano(db.Model):
 
 class Transecto(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    transecto = db.Column(db.String(10))
+    transecto = db.Column(db.String(10), unique=True, nullable=False)
     temporada = db.Column(db.Enum(Temporada))
     fecha = db.Column(db.Date)
     hora_inicial = db.Column(db.Time)
     hora_final = db.Column(db.Time)
-    temperatura = db.Column(db.Float)
-    humedad = db.Column(db.Float)
-    velocidad_viento = db.Column(db.Float)
+    temperatura = db.Column(db.Numeric(10,2))
+    humedad = db.Column(db.Numeric(10,2))
+    velocidad_viento = db.Column(db.Numeric(10,2))
     observaciones = db.Column(db.Text)
     parque_id = db.Column(db.Integer, db.ForeignKey('parque_urbano.id'))
 
@@ -72,10 +102,10 @@ class Transecto(db.Model):
 class Quadrat(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     quadrat = db.Column(db.String(10))
-    temperatura_suelo = db.Column(db.Float())
-    ph_suelo = db.Column(db.Float())
+    temperatura_suelo = db.Column(db.Numeric(10,2))
+    ph_suelo = db.Column(db.Numeric(10,2))
     ramas = db.Column(db.Boolean())
-    profundidad_hojarasca = db.Column(db.Float)
+    profundidad_hojarasca = db.Column(db.Numeric(10,2))
     transecto_id = db.Column(db.Integer, db.ForeignKey('transecto.id'))
     taxa = db.relationship(
         'Taxon',
@@ -88,38 +118,9 @@ class Quadrat(db.Model):
     def __repr__(self):
         return "<Quadrat '{}'>".format(self.quadrat)
 
-class Taxon(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    nombre_cientifico = db.Column(db.String(100))
-    genero = db.Column(db.String(50))
-    especie = db.Column(db.String(50))
-    autor = db.Column(db.String(100))
-
-    def __init__(self, genero, especie=""):
-        self.genero = genero
-        self.especie = especie
-        self.nombre_cientifico = " ".join([self.genero, self.especie]).strip()
 
     def __repr__(self):
         return "<Taxon '{}'>".format(self.nombre_cientifico)
-
-class TaxonQuadrat(db.Model):
-    __tablename__ = 'taxon_quadrat'
-    quadrat_id = db.Column(db.Integer, db.ForeignKey('quadrat.id'), primary_key=True)
-    taxon_id = db.Column(db.Integer, db.ForeignKey('taxon.id'), primary_key=True)
-    abundancia = db.Column(db.Integer)
-    vial = db.Column(db.String(3))
-    alfiler = db.Column(db.Integer)
-    alcohol = db.Column(db.Integer)
-    quadrat = db.relationship(
-        'Quadrat',
-        backref='taxon_aso'
-    )
-    taxon = db.relationship(
-        'Taxon',
-        backref='quadrat_aso'
-    )
-
 class Participante(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
     nombre = db.Column(db.String(255))
@@ -131,34 +132,68 @@ class Participante(db.Model):
 
     def __repr__(self):
         return "<'{}' '{}'>".format(self.nombre, self.apellidos)
+
+
+
+
 ###########################Forms###############################
-class TransectoForm(FlaskForm):
-    transecto = StringField('Transecto', validators=[DataRequired(), Length(max=10)])
-    temporada = SelectField('Temporada', choices=[('seca', 'seca'), ('humeda', 'humeda')])
-    fecha = DateField('Fecha', format='%Y-%m-%d', validators=[Optional()])
-    hora_inicial = TimeField('Hora Inicial', format='%H:%M', validators=[Optional()])
-    hora_final = TimeField('Hora Final', format='%H:%M', validators=[Optional()])
-    temperatura = DecimalField('Temperatura', validators=[Optional()])
-    humedad = DecimalField('Humedad', validators=[Optional()])
-    velocidad_viento = DecimalField('Velocidad Viento', validators=[Optional()])
-    observaciones = TextAreaField('Observaciones', validators=[Optional()])
+BaseModelForm = model_form_factory(FlaskForm)
 
-class TaxonQuadratForm(FlaskForm):
-    #quadrat_id = IntegerField('Quadrat',validators=[DataRequired()])
-    taxon_id = SelectField('Taxon', validators=[DataRequired()], coerce=int)
-    abundancia = IntegerField('Abundancia', validators=[Optional()])
-    vial = StringField('Vial', validators=[Length(max=3)])
-    alfiler = IntegerField('Alfiler', validators=[Optional()])
-    alcohol = IntegerField('Alcohol', validators=[Optional()])
+class ModelForm(BaseModelForm):
+    @classmethod
+    def get_session(self):
+        return db.session
 
-class QuadratForm(FlaskForm):
-    quadrat = StringField('Quadrat', validators=[DataRequired(), Length(max=10)])
-    temperatura_suelo = DecimalField('Temperatura Suelo', validators=[Optional()])
-    ramas = BooleanField('Ramas')
-    profundidad_hojarasca = DecimalField('Profundidad Hojarasca', validators=[Optional()])
+class ParqueForm(ModelForm):
+    class Meta:
+        model = ParqueUrbano
+class TransectoForm(ModelForm):
+    class Meta:
+        model = Transecto
+class QuadratForm(ModelForm):
+    class Meta:
+        model = Quadrat
+class TaxonQuadratForm(ModelForm):
+    class Meta:
+        model = TaxonQuadrat
+        include = ['taxon_id']
 
-class ParqueForm(FlaskForm):
-    parque = StringField('Parque Urbano', validators=[DataRequired(), Length(max=100)])
+class TaxonForm(ModelForm):
+    class Meta:
+        model = Taxon
+
+class ParticipanteForm(ModelForm):
+    class Meta:
+        model = Participante
+
+
+# class TransectoForm(FlaskForm):
+#     transecto = StringField('Transecto', validators=[DataRequired(), Length(max=10)])
+#     temporada = SelectField('Temporada', choices=[('seca', 'seca'), ('humeda', 'humeda')])
+#     fecha = DateField('Fecha', format='%Y-%m-%d', validators=[Optional()])
+#     hora_inicial = TimeField('Hora Inicial', format='%H:%M', validators=[Optional()])
+#     hora_final = TimeField('Hora Final', format='%H:%M', validators=[Optional()])
+#     temperatura = DecimalField('Temperatura', validators=[Optional()])
+#     humedad = DecimalField('Humedad', validators=[Optional()])
+#     velocidad_viento = DecimalField('Velocidad Viento', validators=[Optional()])
+#     observaciones = TextAreaField('Observaciones', validators=[Optional()])
+
+# class TaxonQuadratForm(FlaskForm):
+#     #quadrat_id = IntegerField('Quadrat',validators=[DataRequired()])
+#     taxon_id = SelectField('Taxon', validators=[DataRequired()], coerce=int)
+#     abundancia = IntegerField('Abundancia', validators=[Optional()])
+#     vial = StringField('Vial', validators=[Length(max=3)])
+#     alfiler = IntegerField('Alfiler', validators=[Optional()])
+#     alcohol = IntegerField('Alcohol', validators=[Optional()])
+
+# class QuadratForm(FlaskForm):
+#     quadrat = StringField('Quadrat', validators=[DataRequired(), Length(max=10)])
+#     temperatura_suelo = DecimalField('Temperatura Suelo', validators=[Optional()])
+#     ramas = BooleanField('Ramas')
+#     profundidad_hojarasca = DecimalField('Profundidad Hojarasca', validators=[Optional()])
+
+# class ParqueForm(FlaskForm):
+#     parque = StringField('Parque Urbano', validators=[DataRequired(), Length(max=100)])
 
 ####################### Views #####################
 @app.route('/', methods=['GET', 'POST'])
@@ -233,7 +268,7 @@ def quadrats(tr_id):
 @app.route('/quadrat/<int:qdt_id>', methods=['GET', 'POST'])
 def quadrat(qdt_id):
     form = TaxonQuadratForm()
-    form.taxon_id.choices = [(taxon.id, taxon.nombre_cientifico) for taxon in Taxon.query.order_by('nombre_cientifico')]
+    #form.taxon_id.choices = [(taxon.id, taxon.nombre_cientifico) for taxon in Taxon.query.order_by('nombre_cientifico')]
     quadrat = Quadrat.query.get_or_404(qdt_id)
     #taxa = Taxon.query.all()
     if form.validate_on_submit():
