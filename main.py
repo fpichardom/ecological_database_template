@@ -2,17 +2,20 @@ from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
 from wtforms_alchemy import model_form_factory
+from wtforms import SelectField, StringField, FormField
+from flask_bootstrap import Bootstrap
 #from wtforms import (StringField, IntegerField, BooleanField, TextAreaField,
 #                     SelectField, DecimalField)
 #from wtforms.fields.html5 import DateField
 #from wtforms_components import TimeField
-#from wtforms.validators import DataRequired, Length, Optional
+from wtforms.validators import DataRequired, Length, Optional, InputRequired
 from config import Config
 import enum
 app = Flask(__name__)
 app.config.from_object(Config)
 
 db = SQLAlchemy(app)
+Bootstrap(app)
 #################### Tablas many to many y enum ###############################
 class Temporada(enum.Enum):
     seca = "seca"
@@ -26,21 +29,33 @@ participantes = db.Table(
 ###################### Definicion de Tablas ########################
 class Taxon(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    nombre_cientifico = db.Column(db.String(100))
-    genero = db.Column(db.String(50))
+    nombre_cientifico = db.Column(db.String(150), unique=True)
+    genero = db.Column(db.String(50), nullable=False)
     especie = db.Column(db.String(50))
+    infra_rank = db.Column(db.String(10))
+    sub_especie = db.Column(db.String(50))
     autor = db.Column(db.String(100))
+    __table_args__ = tuple(db.UniqueConstraint('genero', 'especie', 'sub_especie',
+                                      name='uix_Taxon_genero_especie_sub_especie'))
+    #def __init__(self, genero):
+        #self.genero = genero
+        #self.especie = especie
+    def build_sciname(self):
+        if self.sub_especie:
+            self.infra_rank = 'ssp.'
+            subname = "'{}' '{}'".format('ssp.', self.sub_especie)
+        else:
+            subname = ""
+        self.nombre_cientifico = " ".join([self.genero, self.especie, subname]).strip()
 
-    def __init__(self, genero, especie=""):
-        self.genero = genero
-        self.especie = especie
-        self.nombre_cientifico = " ".join([self.genero, self.especie]).strip()
+    def __repr__(self):
+        return "<Taxon '{}'>".format(self.nombre_cientifico)
 
 class TaxonQuadrat(db.Model):
     __tablename__ = 'taxon_quadrat'
     quadrat_id = db.Column(db.Integer, db.ForeignKey('quadrat.id'), primary_key=True)
-    taxon_id = db.Column(db.Integer, db.ForeignKey('taxon.id'), primary_key=True,
-    info={'choices':[(taxon.id, taxon.nombre_cientifico) for taxon in Taxon.query.order_by('nombre_cientifico')]})
+    taxon_id = db.Column(db.Integer, db.ForeignKey('taxon.id'), primary_key=True,info={'form_field_class':SelectField})
+    #info={'choices':[(taxon.id, taxon.nombre_cientifico) for taxon in Taxon.query.order_by('nombre_cientifico')]})
     abundancia = db.Column(db.Integer)
     vial = db.Column(db.String(3))
     alfiler = db.Column(db.Integer)
@@ -54,12 +69,11 @@ class TaxonQuadrat(db.Model):
         backref='quadrat_aso'
     )
 
-
 class ParqueUrbano(db.Model):
     #__tablename__ = 'parque_urbano'
 
     id = db.Column(db.Integer, primary_key=True)
-    parque = db.Column(db.String(100))
+    parque = db.Column(db.String(100), unique=True)
     transectos = db.relationship(
         'Transecto',
         backref='parque',
@@ -72,8 +86,8 @@ class ParqueUrbano(db.Model):
 
 class Transecto(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    transecto = db.Column(db.String(10), unique=True, nullable=False)
-    temporada = db.Column(db.Enum(Temporada))
+    transecto = db.Column(db.String(50), unique=True, nullable=False)
+    temporada = db.Column(db.Enum(Temporada), info = {'coerce':str})
     fecha = db.Column(db.Date)
     hora_inicial = db.Column(db.Time)
     hora_final = db.Column(db.Time)
@@ -112,6 +126,8 @@ class Quadrat(db.Model):
         secondary='taxon_quadrat',
         viewonly=True
     )
+    __table_args__ = tuple(db.UniqueConstraint('quadrat', 'transecto_id',
+                                      name='uix_Taxon_genero_especie_sub_especie'))
     #def __init__(self, quadrat):
     #    self.quadrat = quadrat
 
@@ -119,12 +135,10 @@ class Quadrat(db.Model):
         return "<Quadrat '{}'>".format(self.quadrat)
 
 
-    def __repr__(self):
-        return "<Taxon '{}'>".format(self.nombre_cientifico)
 class Participante(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
-    nombre = db.Column(db.String(255))
-    apellidos = db.Column(db.String(255))
+    nombre = db.Column(db.String(255), nullable=False)
+    apellidos = db.Column(db.String(255), nullable=False)    
 
     def __init__(self, nombre, apellido):
         self.nombre = nombre
@@ -132,7 +146,7 @@ class Participante(db.Model):
 
     def __repr__(self):
         return "<'{}' '{}'>".format(self.nombre, self.apellidos)
-
+        
 
 
 
@@ -150,6 +164,13 @@ class ParqueForm(ModelForm):
 class TransectoForm(ModelForm):
     class Meta:
         model = Transecto
+        # field_args ={
+        #     'temporata':{
+        #         'validators':[Optional()],
+        #         'choices':[('seca', 'seca'), ('humeda', 'humeda')],
+        #         'coerce': str
+        #     }
+        # }
 class QuadratForm(ModelForm):
     class Meta:
         model = Quadrat
@@ -165,6 +186,14 @@ class TaxonForm(ModelForm):
 class ParticipanteForm(ModelForm):
     class Meta:
         model = Participante
+
+class ParticipanteSubForm(FlaskForm):
+    nombre = StringField('Nombre', validators=[InputRequired()])
+    apellidos = StringField('Apellidos', validators=[InputRequired()])
+
+class ParticipanteForm(FlaskForm):
+    participante = FormField(ParticipanteSubForm)
+
 
 
 # class TransectoForm(FlaskForm):
@@ -213,6 +242,7 @@ def home():
 @app.route('/transectos/<int:parque_id>', methods=['GET', 'POST'])
 def transectos(parque_id):
     form = TransectoForm()
+    #form.temporada.choices=[('seca','seca'),('humeda','humeda')]
     transectos = Transecto.query.filter_by(parque_id=parque_id)
     parque = ParqueUrbano.query.get_or_404(parque_id)
 
@@ -268,7 +298,7 @@ def quadrats(tr_id):
 @app.route('/quadrat/<int:qdt_id>', methods=['GET', 'POST'])
 def quadrat(qdt_id):
     form = TaxonQuadratForm()
-    #form.taxon_id.choices = [(taxon.id, taxon.nombre_cientifico) for taxon in Taxon.query.order_by('nombre_cientifico')]
+    form.taxon_id.choices = [(taxon.id, taxon.nombre_cientifico) for taxon in Taxon.query.order_by('nombre_cientifico')]
     quadrat = Quadrat.query.get_or_404(qdt_id)
     #taxa = Taxon.query.all()
     if form.validate_on_submit():
@@ -288,6 +318,40 @@ def quadrat(qdt_id):
         form=form,
         quadrat=quadrat,
         asos=asos
+    )
+
+@app.route('/taxa', methods=['GET', 'POST'])
+def taxon():
+    form = TaxonForm()
+    if form.validate_on_submit():
+        new_taxon = Taxon()
+        new_taxon.genero = form.genero.data
+        new_taxon.especie = form.especie.data
+        new_taxon.sub_especie = form.sub_especie.data
+        new_taxon.build_sciname()
+        db.session.add(new_taxon)
+        db.session.commit()
+    taxa = Taxon.query.order_by('nombre_cientifico').all()
+    return render_template(
+        'taxa.html',
+        taxa=taxa,
+        form=form
+    )
+
+@app.route('/participantes', methods=['GET', 'POST'])
+def participante():
+    form = ParticipanteForm()
+    if form.validate_on_submit():
+        #new_parti = Participante()
+        new_parti = form.participante.data
+        return new_parti
+        #db.session.add(new_parti)
+        #db.session.commit()
+    participantes = Participante.query.order_by('nombre').all()
+    return render_template(
+        'participantes.html',
+        participantes=participantes,
+        form=form
     )
 if __name__ == '__main__':
     app.run()
