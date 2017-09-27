@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Taxa{% endblock %}
+{% block sub %}Taxa{% endblock %}
+{% block body %}
+    <div class="row">
+        <div class="col-md-5">
+            <div class="row">
+                <div class="col-md-10">
+                    <h3>Añadir taxon</h3>
+                    <div class="row">                        
+                        <form method="POST" action="/taxa">
+                            {{ form.hidden_tag()}}                            
+                            {{ render_field(form.genero) }}
+                            {{ render_field(form.especie) }}
+                            {{ render_field(form.sub_especie) }}
+                            {{ render_field(form.autor) }}
+                            <input type="submit" value="Añadir"> 
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-5">
+            <div class="row">
+                <div class="col-md-12">
+                    <h3>Taxa</h3>
+                    <div class="row">
+                        {% if taxa %}
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>{{ form.nombre_cientifico.label }}</th>                                     
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for taxon in taxa %}
+                                        <tr>
+                                            <td>{{ taxon.nombre_cientifico }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        {% else %}
+                            <p>Ninguna entrada disponible</p>
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+
+    </div>
+
+{%endblock%}
