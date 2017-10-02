@@ -4,10 +4,10 @@ from flask_wtf import FlaskForm
 from wtforms_alchemy import model_form_factory
 from wtforms import SelectField, StringField, FormField
 from flask_bootstrap import Bootstrap
-#from wtforms import (StringField, IntegerField, BooleanField, TextAreaField,
-#                     SelectField, DecimalField)
-#from wtforms.fields.html5 import DateField
-#from wtforms_components import TimeField
+from wtforms import (StringField, IntegerField, BooleanField, TextAreaField,
+                    SelectField, DecimalField)
+from wtforms.fields.html5 import DateField
+from wtforms_components import TimeField
 from wtforms.validators import DataRequired, Length, Optional, InputRequired
 from config import Config
 import enum
@@ -150,7 +150,10 @@ class Participante(db.Model):
 
 
 
-###########################Forms###############################
+##################################Forms#########################################
+
+###########Wtforms-Alchemy forms#################
+
 BaseModelForm = model_form_factory(FlaskForm)
 
 class ModelForm(BaseModelForm):
@@ -174,10 +177,10 @@ class TransectoForm(ModelForm):
 class QuadratForm(ModelForm):
     class Meta:
         model = Quadrat
-class TaxonQuadratForm(ModelForm):
-    class Meta:
-        model = TaxonQuadrat
-        include = ['taxon_id']
+# class TaxonQuadratForm(ModelForm):
+#     class Meta:
+#         model = TaxonQuadrat
+#         include = ['taxon_id']
 
 class TaxonForm(ModelForm):
     class Meta:
@@ -194,7 +197,7 @@ class ParticipanteSubForm(FlaskForm):
 class ParticipanteForm(FlaskForm):
     participante = FormField(ParticipanteSubForm)
 
-
+########Wtforms Forms ###############
 
 # class TransectoForm(FlaskForm):
 #     transecto = StringField('Transecto', validators=[DataRequired(), Length(max=10)])
@@ -207,13 +210,13 @@ class ParticipanteForm(FlaskForm):
 #     velocidad_viento = DecimalField('Velocidad Viento', validators=[Optional()])
 #     observaciones = TextAreaField('Observaciones', validators=[Optional()])
 
-# class TaxonQuadratForm(FlaskForm):
-#     #quadrat_id = IntegerField('Quadrat',validators=[DataRequired()])
-#     taxon_id = SelectField('Taxon', validators=[DataRequired()], coerce=int)
-#     abundancia = IntegerField('Abundancia', validators=[Optional()])
-#     vial = StringField('Vial', validators=[Length(max=3)])
-#     alfiler = IntegerField('Alfiler', validators=[Optional()])
-#     alcohol = IntegerField('Alcohol', validators=[Optional()])
+class TaxonQuadratForm(FlaskForm):
+    #quadrat_id = IntegerField('Quadrat',validators=[DataRequired()])
+    taxon_id = SelectField('Taxon', validators=[DataRequired()], coerce=int)
+    abundancia = IntegerField('Abundancia', validators=[Optional()])
+    vial = StringField('Vial', validators=[Length(max=3)])
+    alfiler = IntegerField('Alfiler', validators=[Optional()])
+    alcohol = IntegerField('Alcohol', validators=[Optional()])
 
 # class QuadratForm(FlaskForm):
 #     quadrat = StringField('Quadrat', validators=[DataRequired(), Length(max=10)])
