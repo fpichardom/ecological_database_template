@@ -1,16 +1,17 @@
-from flask_script import Manager, Server
-from flask_migrate import Migrate, MigrateCommand
-
-from main import (
-    app,
-    db,
+from webapp import app
+from webapp.models import (
+   db,
     Taxon,
     Transecto,
     ParqueUrbano,
     Participante,
     Quadrat,
-    TaxonQuadrat
+    TaxonQuadrat 
 )
+from flask_script import Manager, Server
+from flask_migrate import Migrate, MigrateCommand
+
+
 migrate = Migrate(app, db)
 
 manager = Manager(app)
