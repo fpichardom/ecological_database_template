@@ -1,15 +1,16 @@
 from flask import Flask, render_template, request, redirect, url_for
-from webapp.config import Config
-from webapp.models import(
+from .config import Config
+from .models import(
     db, Taxon, TaxonQuadrat, ParqueUrbano, Transecto,
     Quadrat, Participante
 )
 from webapp.forms import(
-     ParqueForm, TransectoForm, QuadratForm,
-     TaxonQuadratForm,ParticipanteForm,TaxonForm)
+    ParqueForm, TransectoForm, QuadratForm,
+    TaxonQuadratForm, ParticipanteForm, TaxonForm)
 
 from flask_bootstrap import Bootstrap
-
+from wtforms.validators import ValidationError
+from sqlalchemy.exc import IntegrityError
 app = Flask(__name__)
 app.config.from_object(Config)
 db.init_app(app)
@@ -20,11 +21,13 @@ Bootstrap(app)
 #@app.route('/parque_urbano')
 def home():
     form = ParqueForm()
+    parques = ParqueUrbano.query.all()
     if form.validate_on_submit():
         new_parque = ParqueUrbano(form.parque.data)
         db.session.add(new_parque)
         db.session.commit()
-    parques = ParqueUrbano.query.all()
+        return redirect(url_for('home'))    
+    
     return render_template(
         'parque.html',
         parques=parques,
@@ -50,10 +53,15 @@ def transectos(parque_id):
         new_tr.humedad = form.humedad.data
         new_tr.velocidad_viento = form.velocidad_viento.data
         new_tr.observaciones = form.observaciones.data
-
-        db.session.add(new_tr)
-        db.session.commit()
-
+   
+        try:
+            db.session.add(new_tr)
+            db.session.commit()
+            return redirect(url_for('transectos',parque_id=parque.id))
+        except IntegrityError:
+            form.transecto.errors.append('Ya existe')
+            db.session.rollback()
+            
     return render_template(
         'transectos.html',
         transectos=transectos,
@@ -77,7 +85,7 @@ def quadrats(tr_id):
 
         db.session.add(new_qdt)
         db.session.commit()
-
+        return redirect(url_for('quadrats', tr_id=tr_id))
 
     return render_template(
         'quadrats.html',
@@ -91,6 +99,7 @@ def quadrat(qdt_id):
     form = TaxonQuadratForm()
     form.taxon_id.choices = [(taxon.id, taxon.nombre_cientifico) for taxon in Taxon.query.order_by('nombre_cientifico')]
     quadrat = Quadrat.query.get_or_404(qdt_id)
+    asos = TaxonQuadrat.query.filter_by(quadrat_id=qdt_id).all()
     #taxa = Taxon.query.all()
     if form.validate_on_submit():
         new_bind = TaxonQuadrat()
@@ -100,10 +109,11 @@ def quadrat(qdt_id):
         new_bind.vial = form.vial.data.upper()
         new_bind.alfiler = form.alfiler.data
         new_bind.alcohol = form.alcohol.data
-        if not TaxonQuadrat.query.filter_by(quadrat_id=qdt_id, taxon_id=form.taxon_id.data).all():
+        if not TaxonQuadrat.query.filter_by(quadrat_id=qdt_id, taxon_id=form.taxon_id.data).first():
             db.session.add(new_bind)
             db.session.commit()
-    asos = TaxonQuadrat.query.filter_by(quadrat_id=qdt_id).all()
+            return redirect(url_for('quadrat',qdt_id=qdt_id))
+
     return render_template(
         'quadrat.html',
         form=form,
@@ -114,6 +124,8 @@ def quadrat(qdt_id):
 @app.route('/taxa', methods=['GET', 'POST'])
 def taxon():
     form = TaxonForm()
+    taxa = Taxon.query.order_by('nombre_cientifico').all()
+
     if form.validate_on_submit():
         new_taxon = Taxon()
         new_taxon.genero = form.genero.data
@@ -122,7 +134,8 @@ def taxon():
         new_taxon.build_sciname()
         db.session.add(new_taxon)
         db.session.commit()
-    taxa = Taxon.query.order_by('nombre_cientifico').all()
+        return redirect(url_for('taxon'))
+    
     return render_template(
         'taxa.html',
         taxa=taxa,
@@ -130,7 +143,7 @@ def taxon():
     )
 
 @app.route('/participantes', methods=['GET', 'POST'])
-def participante():
+def participantes():
     form = ParticipanteForm()
     if form.validate_on_submit():
         #new_parti = Participante()
@@ -138,6 +151,7 @@ def participante():
         return new_parti
         #db.session.add(new_parti)
         #db.session.commit()
+        return redirect(url_for('participantes'))
     participantes = Participante.query.order_by('nombre').all()
     return render_template(
         'participantes.html',

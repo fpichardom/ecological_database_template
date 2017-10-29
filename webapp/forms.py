@@ -4,6 +4,8 @@ from wtforms import (StringField, IntegerField, BooleanField, TextAreaField,
 from wtforms.fields.html5 import DateField
 from wtforms_components import TimeField
 from wtforms.validators import InputRequired, Length, Optional
+from wtforms_alchemy import Unique
+from .models import Transecto
 
 ### To enable wtforms_alchemy #######
 
