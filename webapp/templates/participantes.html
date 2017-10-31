@@ -1,10 +1,46 @@
-{% extends "bootstrap/base.html" %}
-{% import "bootstrap/wtf.html" as wtf %}
-
-{% block content %}
- 
-
-{{ wtf.quick_form(form) }}
-
-
+{% extends "base.html" %}
+{% block title %}Agents{% endblock %}
+{% block sub %}Agents{% endblock %}
+{% block body %}
+    <div class="row">
+        <div class="col-md-5">
+            <div class="row">
+                <div class="col-md-10">
+                    <h3>Add New Agent</h3>
+                    <div class="row">                        
+                        {{ wtf.quick_form(form) }}                        
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-5">
+            <div class="row">
+                <div class="col-md-12">
+                    <h3>Agents</h3>
+                    <div class="row">
+                        {% if participantes %}
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Agent Name</th>
+                                        <th>Agent Surname</th>                                     
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for parti in participantes %}
+                                        <tr>
+                                            <td>{{ parti.nombre }}</td>
+                                            <td>{{parti.apellidos }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        {% else %}
+                            <p>No entry available</p>
+                        % endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}

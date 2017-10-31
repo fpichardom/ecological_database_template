@@ -1,3 +1,5 @@
+{% import "bootstrap/wtf.html" as wtf %}
+{% import "bootstrap/utils.html" as utils %}
 {% macro render_field(field) %}
     <div class="form-group">
         {{ field.label }}
@@ -17,11 +19,30 @@
         {% endif %}
     </div>
 {% endmacro%}
+
+{%macro render_formfield(field)%}
+    {%for unit in field %}
+        {%if unit.widget.input_type == 'hidden'%}
+            {{unit()}}
+        {%else%}
+            {{unit.label}}
+            {%if unit.errors%}
+                {%for e in unit.errors%}
+                    <p>class="help-block">{{e}}</p>
+                {% endfor %}
+            {%endif%}
+            {{unit(class_="form-control")}}
+        {%endif%}
+    {%endfor%}
+
+{%endmacro%}
+
+
 {% macro render_checkbox(field) %}
     <div class="checkbox">
         <label>{{field}} <b>{{field.label.text}}</b></label>
     </div>
-{%- endmacro %}
+{% endmacro %}
 
 
 <!DOCTYPE html>
@@ -38,11 +59,21 @@
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
         
     </head>
+    {{utils.flashed_messages()}}
+    <!-- {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <ul class=flashes>
+      {% for message in messages %}
+        <li>{{ message }}</li>
+      {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %} -->
     <body>
         <div class="container">
             <div class="jumbotron text-center">
-                <h1><a href="/"> Proyecto Hormigas</a></h1>
-                <h2>{% block sub %} Parques {%endblock%}</h2>
+                <h1><a href="/"> Ecology Database</a></h1>
+                <h2>{% block sub %} Level 1 Locality {%endblock%}</h2>
 
             </div>
             {% block body %}

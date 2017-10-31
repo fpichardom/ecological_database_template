@@ -1,20 +1,24 @@
 {% extends "base.html" %}
-{% block title %}Parques{% endblock %}
+{% block title %}Localities Level 1{% endblock %}
 {% block body %}
     <div class="row">
         <div class="col-md-9">
             <div class="row">
-                <h3>Añadir Parque Urbano</h3>
+                <h3>Add locality level 1 </h3>
             </div>
             <div class="row">
-                <form method="POST" action="/">
+                <!--##flask-bootstrap form template##-->
+                {{ wtf.quick_form(form) }}                    
+                
+                <!-- ##Manual macro for form creation##
+                    <form method="POST" action="/">
                     {{ form.hidden_tag() }}
                     {{ render_field(form.parque) }}
                     <input type="submit" value="Añadir">
-                </form>
+                </form> -->
             </div>
             <div class="row">
-                <h3>Lista de Parques Urbanos</h3>
+                <h3>Locality level 1 list</h3>
             </div>
             <div class="row">            
                 {% for p in parques %}

@@ -26,8 +26,8 @@ class Taxon(db.Model):
     autor = db.Column(db.String(100))
 
     #Constraint taxa to have a unique name until the level of subspecies
-    __table_args__ = tuple(db.UniqueConstraint('genero', 'especie', 'sub_especie',
-                                               name='uix_Taxon_genero_especie_sub_especie'))
+    __table_args__ = (db.UniqueConstraint('genero', 'especie', 'sub_especie',
+                                          name='uix_Taxon_genero_especie_sub_especie'),)
     #def __init__(self, genero):
         #self.genero = genero
         #self.especie = especie
@@ -135,8 +135,8 @@ class Quadrat(db.Model):
     #    self.quadrat = quadrat
 
     #Constrait only if the quadrat name is unique for the transect
-    __table_args__ = tuple(db.UniqueConstraint(
-        'quadrat', 'transecto_id', name='uix_Quadrat_quadrat_transecto_id'))
+    __table_args__ = (db.UniqueConstraint(
+        'quadrat', 'transecto_id', name='uix_Quadrat_quadrat_transecto_id'),)
     
     def __repr__(self):
         return "<Quadrat '{}'>".format(self.quadrat)
@@ -149,14 +149,14 @@ class Participante(db.Model):
     nombre = db.Column(db.String(255), nullable=False)
     apellidos = db.Column(db.String(255), nullable=False)
 
-    def __init__(self, nombre, apellido):
-        self.nombre = nombre
-        self.apellidos = apellido
+    # def __init__(self, nombre, apellido):
+    #     self.nombre = nombre
+    #     self.apellidos = apellido
 
     # Constraint only for small applications where names of participants are expected to be unique
-    __table_args__ = tuple(db.UniqueConstraint(
-        'nombre', 'apellido', name='uix_Participante_nombre_apellido'))
-    
+    __table_args__ = (db.UniqueConstraint(
+        'nombre', 'apellidos', name='uix_Participante_nombre_apellido'),)
+
     def __repr__(self):
         return "<'{}' '{}'>".format(self.nombre, self.apellidos)
         

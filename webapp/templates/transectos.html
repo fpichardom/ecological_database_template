@@ -1,15 +1,17 @@
 {% extends "base.html" %}
-{% block title %}Transectos{% endblock %}
-{% block sub %} {{parque.parque}} {% endblock %}
+{% block title %}Locality level 2{% endblock %}
+{% block sub %} <b>{{parque.parque}}</b> {% endblock %}
 {% block body %}
     <div class="row">
         <div class="col-md-5">
             <div class="col-md-10">
                 <div class="row">
-                    <h3>Añadir Transecto</h3>
+                    <h3>Add locality level 2</h3>
                 </div>          
                 <div class="row">
-                    <form method="POST" action="{{ url_for('transectos',parque_id=parque.id) }}">
+                        {{ wtf.quick_form(form) }}
+
+                    <!--<form method="POST" action="{{ url_for('transectos',parque_id=parque.id) }}">
                         {{ form.hidden_tag() }}
                         {{ render_field(form.transecto) }}
                         {{ render_field(form.temporada) }}
@@ -20,8 +22,8 @@
                         {{ render_field(form.humedad) }}
                         {{ render_field(form.velocidad_viento) }}
                         {{ render_field(form.observaciones) }}
-                        <input type="submit" value="Añadir">
-                    </form>
+                        <input type="submit" value="Añadir"> </form> -->
+                    
                 </div>
             </div>
         </div>

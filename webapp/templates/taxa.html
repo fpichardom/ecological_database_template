@@ -6,16 +6,9 @@
         <div class="col-md-5">
             <div class="row">
                 <div class="col-md-10">
-                    <h3>Añadir taxon</h3>
+                    <h3>Add New Taxon</h3>
                     <div class="row">                        
-                        <form method="POST" action="/taxa">
-                            {{ form.hidden_tag()}}                            
-                            {{ render_field(form.genero) }}
-                            {{ render_field(form.especie) }}
-                            {{ render_field(form.sub_especie) }}
-                            {{ render_field(form.autor) }}
-                            <input type="submit" value="Añadir"> 
-                        </form>
+                        {{ wtf.quick_form(form) }}
                     </div>
                 </div>
             </div>
@@ -29,7 +22,7 @@
                             <table class="table">
                                 <thead>
                                     <tr>
-                                        <th>{{ form.nombre_cientifico.label }}</th>                                     
+                                        <th>Scientific Name</th>                                     
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -41,17 +34,12 @@
                                 </tbody>
                             </table>
                         {% else %}
-                            <p>Ninguna entrada disponible</p>
+                            <p>No entry available</p>
+                            <!--<p>Ninguna entrada disponible</p>-->
                         {% endif %}
-
                     </div>
-
                 </div>
-
             </div>
         </div>
-
-
     </div>
-
 {%endblock%}
