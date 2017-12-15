@@ -18,11 +18,7 @@
                     </div>
                     
                     <div class="row">
-                        <script type="text/javascript">
-                            $(document).ready(function() {
-                                $("select.search-select").select2();
-                            });
-                        </script>
+                        
                         <form method="POST" action="{{ url_for('quadrat', qdt_id=quadrat.id)}}">
                             {{ form.hidden_tag()}}                            
                             {{ render_field(form.taxon_id) }}
