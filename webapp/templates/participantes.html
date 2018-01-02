@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 {% block title %}Agents{% endblock %}
-{% block sub %}Agents{% endblock %}
+{% block sub %}
+    Agents
+    <br>
+    <a href="{{ url_for('transectos', parque_id=parque.id)}}">Back</a>
+{% endblock %}
 {% block body %}
     <div class="row">
         <div class="col-md-5">
@@ -30,14 +34,14 @@
                                     {% for parti in participantes %}
                                         <tr>
                                             <td>{{ parti.nombre }}</td>
-                                            <td>{{parti.apellidos }}</td>
+                                            <td>{{ parti.apellidos }}</td>
                                         </tr>
                                     {% endfor %}
                                 </tbody>
                             </table>
                         {% else %}
                             <p>No entry available</p>
-                        % endif %}
+                        {% endif %}
                     </div>
                 </div>
             </div>

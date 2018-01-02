@@ -5,12 +5,13 @@ db = SQLAlchemy()
 
 #################### Tablas many to many y enum class ###############################
 class Temporada(enum.Enum):
-    seca = "seca"
-    humeda = "humeda"
+    none = ""
+    wet = "wet"
+    dry = "dry"
 
 participantes = db.Table(
     'participante_transecto',
-    db.Column('transecto_id', db.Integer, db.ForeignKey('transecto.transecto')),
+    db.Column('transecto_id', db.Integer, db.ForeignKey('transecto.id')),
     db.Column('participante_id', db.Integer, db.ForeignKey('participante.id'))
 )
 ###################### Definicion de Tablas ########################
@@ -34,7 +35,7 @@ class Taxon(db.Model):
     def build_sciname(self):
         if self.sub_especie:
             self.infra_rank = 'ssp.'
-            subname = "'{}' '{}'".format('ssp.', self.sub_especie)
+            subname = "{} {}".format('ssp.', self.sub_especie)
         else:
             subname = ""
         self.nombre_cientifico = " ".join([self.genero, self.especie, subname]).strip()
@@ -82,7 +83,7 @@ class ParqueUrbano(db.Model):
         return "<Parque '{}'>".format(self.parque)
 
 class Transecto(db.Model):
-    __tablename__ ='transecto'
+    __tablename__ = 'transecto'
 
     id = db.Column(db.Integer, primary_key=True)
     transecto = db.Column(db.String(50), unique=True, nullable=False)
@@ -137,13 +138,13 @@ class Quadrat(db.Model):
     #Constrait only if the quadrat name is unique for the transect
     __table_args__ = (db.UniqueConstraint(
         'quadrat', 'transecto_id', name='uix_Quadrat_quadrat_transecto_id'),)
-    
+
     def __repr__(self):
         return "<Quadrat '{}'>".format(self.quadrat)
 
 
 class Participante(db.Model):
-    __tablename__='participante'
+    __tablename__ = 'participante'
 
     id = db.Column(db.Integer(), primary_key=True)
     nombre = db.Column(db.String(255), nullable=False)

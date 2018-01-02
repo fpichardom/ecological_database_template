@@ -1,12 +1,12 @@
 from webapp import app
 from webapp.models import (
-   db,
+    db,
     Taxon,
     Transecto,
     ParqueUrbano,
     Participante,
     Quadrat,
-    TaxonQuadrat 
+    TaxonQuadrat
 )
 from flask_script import Manager, Server
 from flask_migrate import Migrate, MigrateCommand

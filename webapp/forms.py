@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import (StringField, IntegerField, BooleanField, TextAreaField,
-                    SelectField, DecimalField, FormField, SubmitField, FieldList)
+                    SelectField, DecimalField, FormField, SubmitField, FieldList, SelectMultipleField)
 from wtforms.fields.html5 import DateField
 from wtforms_components import TimeField
 from wtforms.validators import InputRequired, Length, Optional
@@ -18,27 +18,28 @@ from .models import Transecto
 ######## Standard Wtforms Forms ###############
 
 class ParqueForm(FlaskForm):
-    parque = StringField('Locality level 1', validators=[InputRequired(), Length(max=100)])
+    parque = StringField('Level 1 Locality', validators=[InputRequired(), Length(max=100)])
     submit = SubmitField('Add')
 
 class TransectoForm(FlaskForm):
-    transecto = StringField('Transecto', validators=[InputRequired(), Length(max=50)])
-    temporada = SelectField('Temporada', choices=[('seca', 'seca'), ('humeda', 'humeda')])
-    fecha = DateField('Fecha', format='%Y-%m-%d', validators=[Optional()], description="yyyy-mm-dd")
-    hora_inicial = TimeField('Hora Inicial', format='%H:%M', validators=[Optional()],description="HH:MM")
-    hora_final = TimeField('Hora Final', format='%H:%M', validators=[Optional()],description="HH:MM")
-    temperatura = DecimalField('Temperatura', validators=[Optional()])
-    humedad = DecimalField('Humedad', validators=[Optional()])
-    velocidad_viento = DecimalField('Velocidad Viento', validators=[Optional()])
-    observaciones = TextAreaField('Observaciones', validators=[Optional()])
+    transecto = StringField('Level 2 Locality', validators=[InputRequired(), Length(max=50)])
+    temporada = SelectField('Season', choices=[("", ""), ('wet', 'wet'), ('dry', 'dry')])
+    fecha = DateField('Date', format='%Y-%m-%d', validators=[Optional()])#, description="yyyy-mm-dd"
+    hora_inicial = TimeField('Start Time', format='%H:%M', validators=[Optional()],description="HH:MM")
+    hora_final = TimeField('End Time', format='%H:%M', validators=[Optional()])#, description="HH:MM"
+    temperatura = DecimalField('Temperature', validators=[Optional()])
+    humedad = DecimalField('Humidity', validators=[Optional()])
+    velocidad_viento = DecimalField('Wind Speed', validators=[Optional()])
+    observaciones = TextAreaField('Observations', validators=[Optional()])
+    participantes = SelectMultipleField('Participantes', validators=[Optional()], coerce=int)
     #participantes = FieldList(SelectField('Participante',choices=None), min_entries=2)
     submit = SubmitField('Add')
 
 class QuadratForm(FlaskForm):
-    quadrat = StringField('Quadrat', validators=[InputRequired(), Length(max=10)])
-    temperatura_suelo = DecimalField('Temperatura Suelo', validators=[Optional()])
-    ramas = BooleanField('Ramas')
-    profundidad_hojarasca = DecimalField('Profundidad Hojarasca', validators=[Optional()])
+    quadrat = StringField('Level 3 Locality', validators=[InputRequired(), Length(max=10)])
+    temperatura_suelo = DecimalField('Soil Temperature', validators=[Optional()])
+    ramas = BooleanField('Branches')
+    profundidad_hojarasca = DecimalField('Leaf Litter Depth', validators=[Optional()])
     submit = SubmitField('Add')
 
 
@@ -46,28 +47,28 @@ class QuadratForm(FlaskForm):
 class TaxonQuadratForm(FlaskForm):
     #quadrat_id = IntegerField('Quadrat',validators=[InputRequired()])
     taxon_id = SelectField('Taxon', validators=[InputRequired()], coerce=int)
-    abundancia = IntegerField('Abundancia', validators=[Optional()])
+    abundancia = IntegerField('Abundance', validators=[Optional()])
     vial = StringField('Vial', validators=[Length(max=3), Optional()])
-    alfiler = IntegerField('Alfiler', validators=[Optional()])
-    alcohol = IntegerField('Alcohol', validators=[Optional()])
+    alfiler = IntegerField('Pinned', validators=[Optional()])
+    alcohol = IntegerField('Wet Collection', validators=[Optional()])
 
 
 
 class ParticipanteSubForm(FlaskForm):
-    nombre = StringField('Nombre', validators=[InputRequired(), Length(max=10)])
-    apellidos = StringField('Apellidos', validators=[InputRequired()])
+    nombre = StringField('Name', validators=[InputRequired(), Length(max=10)])
+    apellidos = StringField('Lastname', validators=[InputRequired()])
 
     def __init__(self, csrf_enabled=False, *args, **kwargs):
         super(ParticipanteSubForm, self).__init__(csrf_enabled=csrf_enabled, *args, **kwargs)
 class ParticipanteForm(FlaskForm):
-    participante = FormField(ParticipanteSubForm)
+    agent = FormField(ParticipanteSubForm)
     submit = SubmitField("Add agent")
 
 class TaxonSubForm(FlaskForm):
-    genero = StringField('Género', validators=[InputRequired(), Length(max=50)])
-    especie = StringField('Especie', validators=[Optional(), Length(max=50)], default='sp.')
-    sub_especie = StringField('Sub-especie', validators=[Optional(), Length(max=50)])
-    autor = StringField('Autor', validators=[Optional(), Length(max=100)])
+    genero = StringField('Genus', validators=[InputRequired(), Length(max=50)])
+    especie = StringField('Specific Epithet', validators=[Optional(), Length(max=50)], default='sp.')
+    sub_especie = StringField('Infra-specific Epithet', validators=[Optional(), Length(max=50)])
+    autor = StringField('Author', validators=[Optional(), Length(max=100)])
     
     def __init__(self, csrf_enabled=False, *args, **kwargs):
         super(TaxonSubForm, self).__init__(csrf_enabled=csrf_enabled, *args, **kwargs)

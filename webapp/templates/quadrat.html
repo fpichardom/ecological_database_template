@@ -11,10 +11,10 @@
             <div class="row">
                 <div class="col-md-10">
                     <div class="row">
-                        <h3><a href="/taxa">Nuevo Taxon</a></h3>
+                        <h3><a href="{{ url_for('taxon', qdt_id=quadrat.id)}}">New Taxon</a></h3>
                     </div>
                     <div class="row">
-                        <h3>Añade especies al Quadrat</h3>
+                        <h3>Add species to Level 3 Locality</h3>
                     </div>
                     
                     <div class="row">
@@ -39,7 +39,7 @@
         <div class="col-md-5">
             <div class="row">
                 <div class="col-md-12">
-                    <h3>Especies en Quadrat</h3>
+                    <h3>Species in Level 3 Locality</h3>
                     <div class="row">
                         {% if asos %}
                             <table class="table">
@@ -65,7 +65,8 @@
                                 </tbody>
                             </table>
                         {% else %}
-                            <p>Ninguna entrada disponible</p>
+                            <p>No entry available</p>
+                            <!-- <p>Ninguna entrada disponible</p> -->
                         {% endif %}
 
                     </div>

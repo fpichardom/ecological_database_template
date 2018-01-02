@@ -3,7 +3,9 @@
 {% block sub %}
 Taxa
 <br>
-<a href="javascript:history.go(-1)">Regresar</a>
+<a href="{{ url_for('quadrat', qdt_id=quadrat.id)}}">Back</a>
+<!-- <a href="javascript:history.go(-1)" onclick="location.href = document.referrer; return false;">Back</a> -->
+<!-- <a href="javascript:history.go(-1)">Regresar</a> -->
 {% endblock %}
 {% block body %}
     <div class="row">

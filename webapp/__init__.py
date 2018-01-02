@@ -42,6 +42,7 @@ def home():
 @app.route('/transectos/<int:parque_id>', methods=['GET', 'POST'])
 def transectos(parque_id):
     form = TransectoForm()
+    form.participantes.choices = [(part.id, part.nombre+" "+part.apellidos) for part in Participante.query.order_by('apellidos')]
     #form.temporada.choices=[('seca','seca'),('humeda','humeda')]
     transectos = Transecto.query.filter_by(parque_id=parque_id)
     parque = ParqueUrbano.query.get_or_404(parque_id)
@@ -59,7 +60,10 @@ def transectos(parque_id):
         new_tr.humedad = form.humedad.data
         new_tr.velocidad_viento = form.velocidad_viento.data
         new_tr.observaciones = form.observaciones.data
-   
+        for part in form.participantes.data:
+            part_obj = Participante.query.get_or_404(part)
+            new_tr.participantes.append(part_obj)
+
         try:
             db.session.add(new_tr)
             db.session.commit()
@@ -67,7 +71,8 @@ def transectos(parque_id):
         except IntegrityError:
             form.transecto.errors.append('Ya existe')
             db.session.rollback()
-            
+
+        return redirect(url_for('transectos',parque_id=parque_id))
     return render_template(
         'transectos.html',
         transectos=transectos,
@@ -123,7 +128,7 @@ def quadrat(qdt_id):
         if not TaxonQuadrat.query.filter_by(quadrat_id=qdt_id, taxon_id=form.taxon_id.data).first():
             db.session.add(new_bind)
             db.session.commit()
-            return redirect(url_for('quadrat',qdt_id=qdt_id))
+            return redirect(url_for('quadrat', qdt_id=qdt_id))
 
     return render_template(
         'quadrat.html',
@@ -132,50 +137,52 @@ def quadrat(qdt_id):
         asos=asos
     )
 
-@app.route('/taxa', methods=['GET', 'POST'])
-def taxon():
+@app.route('/taxa/<int:qdt_id>', methods=['GET', 'POST'])
+def taxon(qdt_id):
     form = TaxonForm()
     taxa = Taxon.query.order_by('nombre_cientifico').all()
-
+    quadrat = Quadrat.query.get_or_404(qdt_id)
 
     if form.validate_on_submit():
         new_taxon = Taxon()
         new_taxon.genero = form.taxon.data['genero']
         new_taxon.especie = form.taxon.data['especie']
         new_taxon.sub_especie = form.taxon.data['sub_especie']
-        new_taxon.autor = form.taxon.data['autor']        
+        new_taxon.autor = form.taxon.data['autor']
         new_taxon.build_sciname()
 
         try:
             db.session.add(new_taxon)
             db.session.commit()
-            return redirect(url_for('taxon'))
+            return redirect(url_for('taxon', qdt_id=quadrat.id))
         except IntegrityError:
             db.session.rollback()
-            flash(' Taxon already exists','danger')
-    
+            flash(' Taxon already exists', 'danger')
+
     return render_template(
         'taxa.html',
         taxa=taxa,
+        quadrat=quadrat,
         form=form
     )
 
-@app.route('/participantes', methods=['GET', 'POST'])
-def participantes():
+@app.route('/participantes/<int:parque_id>', methods=['GET', 'POST'])
+def participantes(parque_id):
 
     form = ParticipanteForm()
     participantes = Participante.query.order_by('nombre').all()
     resp =''
+    parque = ParqueUrbano.query.get_or_404(parque_id)
     if form.validate_on_submit():
-        resp = form.participante.data
+        resp = form.agent.data
         new_parti = Participante()
-        new_parti.nombre = form.participante.data['nombre']
-        new_parti.apellidos = form.participante.data['apellidos']
+        new_parti.nombre = form.agent.data['nombre']
+        new_parti.apellidos = form.agent.data['apellidos']
         
         try:
             db.session.add(new_parti)
             db.session.commit()
-            return redirect(url_for('participantes'))
+            return redirect(url_for('participantes', tr_id=parque.id))
         except IntegrityError:
             db.session.rollback()
             flash(' Agent already exists','danger')
@@ -187,13 +194,13 @@ def participantes():
         return render_template(
         'participantes.html',
         participantes=participantes,
-        form=form,resp=resp)
+        form=form,resp=resp,parque=parque)
         #return redirect(url_for('participantes'))
     
     return render_template(
         'participantes.html',
         participantes=participantes,
-        form=form,resp=resp
+        form=form,resp=resp, parque=parque
     )
 if __name__ == '__main__':
     app.run()
