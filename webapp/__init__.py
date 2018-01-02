@@ -182,7 +182,7 @@ def participantes(parque_id):
         try:
             db.session.add(new_parti)
             db.session.commit()
-            return redirect(url_for('participantes', tr_id=parque.id))
+            return redirect(url_for('participantes', parque_id=parque.id))
         except IntegrityError:
             db.session.rollback()
             flash(' Agent already exists','danger')

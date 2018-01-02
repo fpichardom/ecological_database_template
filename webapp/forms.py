@@ -1,6 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms import (StringField, IntegerField, BooleanField, TextAreaField,
-                    SelectField, DecimalField, FormField, SubmitField, FieldList, SelectMultipleField)
+                     SelectField, DecimalField, FormField, SubmitField,
+                     FieldList, SelectMultipleField)
 from wtforms.fields.html5 import DateField
 from wtforms_components import TimeField
 from wtforms.validators import InputRequired, Length, Optional
@@ -31,7 +32,7 @@ class TransectoForm(FlaskForm):
     humedad = DecimalField('Humidity', validators=[Optional()])
     velocidad_viento = DecimalField('Wind Speed', validators=[Optional()])
     observaciones = TextAreaField('Observations', validators=[Optional()])
-    participantes = SelectMultipleField('Participantes', validators=[Optional()], coerce=int)
+    participantes = SelectMultipleField('Agents', validators=[Optional()], coerce=int)
     #participantes = FieldList(SelectField('Participante',choices=None), min_entries=2)
     submit = SubmitField('Add')
 
@@ -58,8 +59,10 @@ class ParticipanteSubForm(FlaskForm):
     nombre = StringField('Name', validators=[InputRequired(), Length(max=10)])
     apellidos = StringField('Lastname', validators=[InputRequired()])
 
+    # Fix problems with the csrf token in subforms
     def __init__(self, csrf_enabled=False, *args, **kwargs):
         super(ParticipanteSubForm, self).__init__(csrf_enabled=csrf_enabled, *args, **kwargs)
+
 class ParticipanteForm(FlaskForm):
     agent = FormField(ParticipanteSubForm)
     submit = SubmitField("Add agent")
@@ -69,7 +72,8 @@ class TaxonSubForm(FlaskForm):
     especie = StringField('Specific Epithet', validators=[Optional(), Length(max=50)], default='sp.')
     sub_especie = StringField('Infra-specific Epithet', validators=[Optional(), Length(max=50)])
     autor = StringField('Author', validators=[Optional(), Length(max=100)])
-    
+
+    # Fix problem with csrf token in subforms
     def __init__(self, csrf_enabled=False, *args, **kwargs):
         super(TaxonSubForm, self).__init__(csrf_enabled=csrf_enabled, *args, **kwargs)
 
